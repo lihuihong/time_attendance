@@ -1,0 +1,17 @@
+server:
+  port: 9002
+spring:
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/check_work_db?useUnicode=true&useSSL=false&characterEncoding=utf8
+    username: root
+    password: root
+  resources:
+    static-locations: classpath:static/
+  jpa:
+    database: MySQL
+    show-sql: true
+jwt:
+  config:
+    key: heylhh
+    ttl: 3600000

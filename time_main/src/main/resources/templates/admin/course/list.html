@@ -1,0 +1,144 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="../../../static/layui/css/layui.css" media="all">
+</head>
+<body>
+<div>
+    <form class="layui-form">
+        <div class="layui-form-item layui-elem-quote">
+            <label class="layui-form-label">课程名称</label>
+            <div class="layui-input-inline">
+                <input type="text" name="courseName" id="courseName"
+                       autocomplete="off" placeholder="请输入课程名称" class="layui-input">
+            </div>
+            <button type="button" class="layui-btn btnSearch" lay-filter="search" lay-submit="">查询</button>
+            <button type="button" class="layui-btn layui-btn-normal btnAdd">+ 新增课程</button>
+        </div>
+    </form>
+    <table class="layui-hide" id="tableList" lay-filter="tableList1"></table>
+</div>
+</body>
+<script src="../../../static/layui/layui.js" charset="utf-8"></script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/javascript" th:inline="none">
+    layui.use(["table","upload"],function(){
+        var table = layui.table;
+        var $ = layui.jquery;
+
+
+        //加载表格
+        table.render({
+            elem: '#tableList',
+            url: '/course/list',
+            method: 'post',
+            dataType: "json",
+            contentType: 'application/json',
+            cols: [[
+                {field: 'index', title: '排序', align: 'center', type: 'numbers'},
+                {field:'userName', title: '任课老师姓名', align:'center'},
+                {field:'courseCode', title: '课程代码', align:'center'},
+                {field:'courseName', title: '课程名称', align:'center'},
+                {field:'courseStart', title: '课程开始时间', align:'center'},
+                {field:'courseEnd', title: '课程结束时间', align:'center'},
+                {field:'attendanceCode', title: '课程签到码', align:'center'},
+                {field:'courseAddr', title: '上课地址', align:'center'},
+                {fixed: 'right', width:260, title: '操作', align:'center', toolbar: '#barDemo'}
+            ]],
+            page:true
+        });
+        //重载表格
+        $('.btnSearch').on('click',function(e){
+            table.reload('tableList',{
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                },
+                where: {
+                    'key': $('#courseName').val(),
+                }
+            });
+        });
+
+        //监听工具条
+        table.on('tool(tableList1)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'del'){
+                layer.confirm('课程名称：'+data.courseName, {icon: 3, title:'是否确定删除?'}, function(index){
+                    $.ajax({
+                        url:'/course/deleteCourseById',
+                        type:'post',
+                        data:{'courseId':data.courseId},
+                        dataType:"json",
+                        beforeSend:function(){//console.log(JSON.stringify(data.field));
+                        },
+                        success:function(data){//do something
+                            if(data.code==0){
+                                layer.msg('恭喜，删除成功！',{icon:1});
+                            } else {
+                                layer.alert(data.message,{icon:2});
+                            }
+                            layer.close(index);
+                            layui.table.reload('tableList');
+                        },
+                        error:function(data){//do something
+                            layer.msg('与服务器连接失败',{icon: 2});
+                        }
+                    });
+                });
+            } else if(obj.event === 'edit'){
+                preDate = data;
+                layer.open({
+                    title: '编辑课程',
+                    type: 2,
+                    shade: false,
+                    area: ['700px', '450px'],
+                    maxmin: true,
+                    btnAlign: 'c',
+                    anim: 0,
+                    shade: [0.5, 'rgb(0,0,0)'],
+                    content: '/page/admin/course/edit',
+                    zIndex: layer.zIndex, //重点1
+                    success: function(layero,index){
+                        // 获取子页面的iframe
+                        var iframe = window['layui-layer-iframe' + index];
+                        // 向子页面的全局函数child传参
+                        iframe.child(data);
+                    },
+                    yes: function(index, layero){
+                        //确认按钮
+                    }
+                });
+            }
+        });
+        $('.btnAdd').on('click',function(){
+            layer.open({
+                title: '新增课程',
+                type: 2,
+                shade: false,
+                area: ['700px', '450px'],
+                maxmin: true,
+                btnAlign: 'c',
+                anim: 0,
+                shade: [0.5, 'rgb(0,0,0)'],
+                content: '/page/admin/course/add',
+                zIndex: layer.zIndex, //重点1
+                success: function(layero){
+                    //layer.setTop(layero); //顶置窗口
+                },
+                yes: function(index, layero){
+                    //确认按钮
+                }
+            });
+        });
+    })
+</script>
+
+</html>

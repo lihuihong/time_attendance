@@ -1,0 +1,107 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="../../../static/layui/css/layui.css" media="all">
+    <style>
+        .frameContent {padding:30px}
+        .frameBtn {text-align:center;margin:20px 0px 0px 30px;padding-top:20px;border-top:1px rgb(204,204,204) dashed}
+        .funList {float: left;}
+        .role-bor{
+            border: 1px solid rgb(230, 230, 230);
+            border-radius: 2px;
+            /*box-shadow: 0 2px 5px 0 rgba(0,0,0,.1);*/
+            padding: 5px 0px;
+        }
+        .role-title{
+            margin: 0px -10px 10px -10px;
+            background-color: #f2f2f2;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <form class="layui-form frameContent layui-form-pane" lay-filter="form">
+        <input type="hidden" id="majorId" name="majorId" />
+        <div class="layui-form-item">
+            <div class="layui-form-label">专业名称</div>
+            <div class="layui-input-inline">
+                <input type="text" name="majorName" required lay-verify="required"  placeholder="专业名称" autocomplete="off" class="layui-input" >
+            </div>
+        </div>
+
+        <div class="frameBtn">
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            <button class="layui-btn" lay-submit lay-filter="submit">保存</button>
+        </div>
+    </form>
+</div>
+</body>
+<script src="../../../static/layui/layui.js" charset="utf-8"></script>
+<script>
+    var info = parent.preDate;
+    var data;
+    function child(d) {
+        data = d;
+        //alert(data);
+    }
+
+    var userId = '${session.userInfo.userId}';
+
+    layui.use(['form'], function(){
+        var form = layui.form;
+        var $ = layui.jquery;
+        //表单初始赋值
+        form.val('form', {
+            "majorId":info.majorId
+            ,"majorName":info.majorName
+        });
+
+        form.render('select');
+
+        //监听提交
+        form.on('submit(submit)',function(formData){
+            $.ajax({
+                url:'/major/updateMajor',
+                type:'post',
+                data:JSON.stringify(formData.field),
+                contentType:"application/json",
+                dataType:"json",
+                beforeSend:function(){
+                    //console.log(JSON.stringify(data.field));
+                },
+                success:function(result){
+                    //do something
+                    if(result.code===0){
+                        var index = parent.layer.getFrameIndex(window.name);//获取当前窗口索引
+
+                        if(userId === String(info.majorId)){
+                            parent.layer.alert('修改成功,因为是当前用户，所以需要刷新页面', {icon : 1},function () {
+                                parent.layer.close(index);
+                                parent.parent.window.location.reload();
+                            });
+                        }else{
+                            parent.layer.msg('修改成功', {icon : 1});
+                            parent.layer.close(index);
+                            parent.layui.table.reload('tableList');//重新加载父级tabel数据
+                        }
+
+                    } else {
+                        layer.alert(data.message,{icon:2});
+                    }
+                },
+                error:function(data){
+                    //do something
+                    layer.msg('与服务器连接失败',{icon: 2});
+                }
+            });
+            return false;
+        });
+    });
+</script>
+</html>
